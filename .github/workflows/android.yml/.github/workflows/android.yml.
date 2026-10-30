@@ -11,41 +11,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ambil kode proyek
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Siapkan Java
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Siapkan Android SDK
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Ekstrak proyek Android
+      - name: Extract Android project
         run: |
           ZIP_FILE=$(find . -maxdepth 2 -type f -iname "*.zip" -print -quit)
           if [ -z "$ZIP_FILE" ]; then
-            echo "File ZIP proyek tidak ditemukan."
+            echo "ZIP project tidak ditemukan."
             exit 1
           fi
+
           mkdir -p build-source
           unzip -q "$ZIP_FILE" -d build-source
+
           WRAPPER=$(find build-source -type f -name gradlew -print -quit)
           if [ -z "$WRAPPER" ]; then
-            echo "File gradlew tidak ditemukan di dalam ZIP."
+            echo "gradlew tidak ditemukan."
             exit 1
           fi
+
           chmod +x "$WRAPPER"
           echo "PROJECT_DIR=$(dirname "$WRAPPER")" >> "$GITHUB_ENV"
 
-      - name: Bangun APK
+      - name: Build debug APK
         run: |
           cd "$PROJECT_DIR"
           ./gradlew --no-daemon assembleDebug
 
-      - name: Simpan hasil APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: sahabat-pintar-sd-apk
